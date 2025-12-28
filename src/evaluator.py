@@ -8,10 +8,6 @@ import os
 import logging
 
 class ModelEvaluator:
-    """
-    Eğitilen modeli test verisi üzerinde değerlendirir ve raporlar oluşturur.
-    """
-
     def __init__(self, model_path, test_data, results_dir="results"):
         self.nlp = spacy.load(model_path)
         self.test_data = test_data
@@ -21,17 +17,12 @@ class ModelEvaluator:
             os.makedirs(self.results_dir)
 
     def evaluate(self):
-        """
-        Test verisi üzerinde metrikleri (Precision, Recall, F1) hesaplar.
-        Returns:
-            pd.DataFrame: Sonuç tablosu.
-        """
-        logging.info("Değerlendirme süreci başladı...")
+        logging.info("Değerlendirme başladı...")
         scorer = Scorer()
         examples = []
         
         for text, annotations in self.test_data:
-            doc = self.nlp.make_doc(text)
+            doc = self.nlp(text) # Tahmin yap
             try:
                 example = Example.from_dict(doc, annotations)
                 examples.append(example)
@@ -52,34 +43,24 @@ class ModelEvaluator:
             
         df = pd.DataFrame(data).sort_values(by='F1-Score', ascending=False)
         
-        # CSV olarak kaydet
-        csv_path = os.path.join(self.results_dir, "evaluation_metrics.csv")
+        csv_path = os.path.join(self.results_dir, "metrics.csv")
         df.to_csv(csv_path, index=False)
         
-        # Grafiği çiz
         self._plot_results(df)
-        
-        logging.info(f"Genel Model Başarısı (F1): {scores.get('ents_f', 0):.4f}")
-        logging.info(f"Raporlar '{self.results_dir}' klasörüne kaydedildi.")
-        return df
+        return df, scores.get('ents_f', 0)
 
     def _plot_results(self, df):
-        """F1 skorlarını görselleştirir ve kaydeder."""
-        if df.empty:
-            return
+        if df.empty: return
 
-        plt.figure(figsize=(12, 8))
+        plt.figure(figsize=(10, 6))
         sns.set_theme(style="whitegrid")
         barplot = sns.barplot(x="F1-Score", y="Entity", data=df, palette="viridis", hue="Entity", legend=False)
-        
-        plt.title('Varlık Tanıma Başarısı (Test Seti)', fontsize=16)
-        plt.xlabel('F1 Score', fontsize=12)
-        plt.ylabel('Etiket Tipi', fontsize=12)
+        plt.title('Varlık Tanıma Başarısı', fontsize=14)
         plt.xlim(0, 1.1)
         
         for i in barplot.containers:
             barplot.bar_label(i, fmt='%.2f', padding=3)
 
-        save_path = os.path.join(self.results_dir, "f1_score_chart.png")
         plt.tight_layout()
-        plt.savefig(save_path)
+        plt.savefig(os.path.join(self.results_dir, "f1_chart.png"))
+        plt.close() # Hafızayı temizle
