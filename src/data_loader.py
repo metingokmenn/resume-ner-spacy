@@ -8,8 +8,8 @@ from sklearn.model_selection import train_test_split
 
 class ResumeDataLoader:
     """
-    JSON verilerini yükler; Skills (parçalama) ve Years of Experience (gelişmiş regex)
-    için özel temizlik kuralları uygular.
+    Loads JSON data; Skills (splitting) and Years of Experience (advanced regex)
+    for custom cleaning rules.
     """
 
     def __init__(self, file_path, test_size=0.2, random_state=42):
@@ -166,10 +166,10 @@ class ResumeDataLoader:
                         skipped_count += 1
                         continue
             
-            logging.info(f"İşlenemeyen Satır: {skipped_count}")
+            logging.info(f"Skipped Row: {skipped_count}")
             
             if not processed_data:
-                logging.error("Hiçbir veri işlenemedi!")
+                logging.error("No data processed!")
                 return [], []
 
             train_data, test_data = train_test_split(
@@ -181,5 +181,5 @@ class ResumeDataLoader:
             return train_data, test_data
 
         except Exception as e:
-            logging.error(f"Veri yükleme hatası: {e}")
+            logging.error(f"Data loading error: {e}")
             return [], []
