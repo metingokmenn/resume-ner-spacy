@@ -1,2 +1,6 @@
-spacy==3.7.0
+spacy>=3.7.0
 tqdm
+pandas
+matplotlib
+seaborn
+scikit-learn

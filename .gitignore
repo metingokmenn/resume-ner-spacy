@@ -1,0 +1,13 @@
+# Python sanal ortam
+venv/
+__pycache__/
+*.pyc
+
+# Model dosyaları (Büyük olabilir)
+models/
+
+# Sonuçlar (Tekrar üretilebilir)
+results/
+
+# Sistem dosyaları
+.DS_Store

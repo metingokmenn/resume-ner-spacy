@@ -1,50 +1,45 @@
 import logging
 from src.data_loader import ResumeDataLoader
 from src.trainer import ResumeNERTrainer
-from src.predictor import ResumeParser
+from src.evaluator import ModelEvaluator
 
-# Loglama ayarları
-logging.basicConfig(level=logging.INFO)
+# Loglama konfigürasyonu
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def main():
-    # --- AYARLAR ---
-    DATA_PATH = "data/raw/ner_resumes.json" # Dosya ismini kontrol et!
-    MODEL_OUTPUT_DIR = "models/output_model"
-    EPOCH_SAYISI = 10
+    # --- PROJE AYARLARI ---
+    DATA_PATH = "data/raw/ner_resumes.json"
+    MODEL_OUTPUT_DIR = "models/resume_ner_model"
+    EPOCH = 15  # Akademik deneylerde genelde 15-20 epoch ile başlanır
 
-    # 1. Veriyi Yükle
-    print("--- 1. ADIM: Veri Yükleniyor ---")
+    # 1. Veri Hazırlığı
+    print("\n" + "="*40)
+    print(" 1. AŞAMA: Veri Hazırlığı ve Ayrıştırma")
+    print("="*40)
     loader = ResumeDataLoader(DATA_PATH)
-    train_data = loader.load_data()
+    train_data, test_data = loader.load_and_split_data()
 
-    # Verinin %90'ını eğitim, %10'unu test gibi düşünelim (Burada hepsini eğitime sokuyoruz şimdilik)
     if not train_data:
-        print("Veri bulunamadı, işlem durduruluyor.")
+        logging.error("Veri seti boş veya yüklenemedi.")
         return
 
-    # 2. Modeli Eğit
-    print(f"\n--- 2. ADIM: Model Eğitiliyor ({len(train_data)} veri ile) ---")
+    # 2. Model Eğitimi
+    print("\n" + "="*40)
+    print(f" 2. AŞAMA: Model Eğitimi (Train Size: {len(train_data)})")
+    print("="*40)
     trainer = ResumeNERTrainer(MODEL_OUTPUT_DIR)
-    trainer.train(train_data, n_iter=EPOCH_SAYISI)
+    trainer.train(train_data, n_iter=EPOCH)
     trainer.save_model()
 
-    # 3. Test Et (Kendi verinle dene)
-    print("\n--- 3. ADIM: Test Ediliyor ---")
-    parser = ResumeParser(MODEL_OUTPUT_DIR)
+    # 3. Değerlendirme
+    print("\n" + "="*40)
+    print(f" 3. AŞAMA: Performans Ölçümü (Test Size: {len(test_data)})")
+    print("="*40)
+    evaluator = ModelEvaluator(MODEL_OUTPUT_DIR, test_data)
+    results = evaluator.evaluate()
     
-    test_metni = """
-    Metin Ozturk
-    Software Engineer
-    Skills: Python, Java, Machine Learning, SQL
-    Experience: 
-    Google - Senior Developer (2020 - 2023)
-    """
-    
-    sonuclar = parser.get_entities(test_metni)
-    
-    print("\n--- BULUNAN VARLIKLAR ---")
-    for item in sonuclar:
-        print(f"[{item['label']}] -> {item['text']}")
+    print("\n--- ÖZET SONUÇ TABLOSU ---")
+    print(results.head(10))  # İlk 10 sonucu göster
 
 if __name__ == "__main__":
     main()
