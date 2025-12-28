@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
 
 def run_experiment(exp_name, base_model, train_data, test_data):
     """Tek bir deney (Eğitim + Test) çalıştırır."""
-    print(f"\n{'='*50}\n DENEY BAŞLIYOR: {exp_name}\n{'='*50}")
+    print(f"\n{'='*50}\n EXPERIMENT STARTING: {exp_name}\n{'='*50}")
     
     output_dir = f"models/{exp_name.lower().replace(' ', '_')}"
     results_dir = f"results/{exp_name.lower().replace(' ', '_')}"
@@ -25,7 +25,7 @@ def run_experiment(exp_name, base_model, train_data, test_data):
     evaluator = ModelEvaluator(output_dir, test_data, results_dir)
     df_metrics, f1_score = evaluator.evaluate()
     
-    print(f"\n>>> {exp_name} F1 Skoru: {f1_score:.4f}")
+    print(f"\n>>> {exp_name} F1 Score: {f1_score:.4f}")
     
     # Tabloya 'Model' sütunu ekle (Karşılaştırma için)
     df_metrics['Model'] = exp_name
@@ -47,10 +47,10 @@ def plot_comparison(combined_df):
         palette="magma"
     )
     
-    plt.title('KARŞILAŞTIRMA: Blank Model vs. Pre-trained Model', fontsize=16, fontweight='bold')
+    plt.title('Comparison: Blank Model vs. Pre-trained Model', fontsize=16, fontweight='bold')
     plt.xlabel('F1 Score', fontsize=12)
     plt.xlim(0, 1.1)
-    plt.legend(title='Model Mimarisi')
+    plt.legend(title='Model Architecture')
     
     for container in chart.containers:
         chart.bar_label(container, fmt='%.2f', padding=3, fontsize=9)
@@ -58,7 +58,7 @@ def plot_comparison(combined_df):
     save_path = "results/final_comparison.png"
     plt.tight_layout()
     plt.savefig(save_path)
-    print(f"\n[BİLGİ] Karşılaştırma grafiği kaydedildi: {save_path}")
+    print(f"\n[INFO] Comparison plot saved: {save_path}")
 
 def main():
     # 1. Veriyi Tek Sefer Yükle (Adil Karşılaştırma İçin)
@@ -89,7 +89,7 @@ def main():
     final_df.to_csv("results/comparison_table.csv", index=False)
     
     plot_comparison(final_df)
-    print("\nPROJE TAMAMLANDI! 🚀")
+    print("\nPROJECT COMPLETED! 🚀")
 
 if __name__ == "__main__":
     main()
