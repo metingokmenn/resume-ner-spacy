@@ -7,8 +7,8 @@ import os
 class ResumeNERApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Resume NER Intelligence - Demo (Hybrid Architecture)")
-        self.root.geometry("1250x750")
+        self.root.title("Resume NER Intelligence - Demo (Hybrid vs. Pure ML)")
+        self.root.geometry("1280x800")
         
         style = ttk.Style()
         style.theme_use('clam')
@@ -20,7 +20,8 @@ class ResumeNERApp:
         
         # İstatistik Değişkenleri
         self.total_processed = 0
-        self.total_score_acc = 0.0 
+        self.total_hybrid_acc = 0.0
+        self.total_pure_acc = 0.0
         
         # Renk Haritası
         self.entity_colors = {
@@ -37,25 +38,44 @@ class ResumeNERApp:
         toolbar.pack(side=tk.TOP, fill=tk.X, padx=5, pady=5)
 
         # Butonlar
-        btn_load_model = tk.Button(toolbar, text="📂 1. Modeli Yükle", command=self.load_model, bg="#4CAF50", fg="white", font=("Arial", 10, "bold"))
+        btn_frame = tk.Frame(toolbar, bg="#e0e0e0")
+        btn_frame.pack(side=tk.LEFT)
+        
+        btn_load_model = tk.Button(btn_frame, text="📂 1. Modeli Yükle", command=self.load_model, bg="#4CAF50", fg="white", font=("Arial", 10, "bold"))
         btn_load_model.pack(side=tk.LEFT, padx=5, pady=5)
 
-        btn_load_json = tk.Button(toolbar, text="📄 2. Test Verisi Yükle", command=self.load_json, bg="#2196F3", fg="white", font=("Arial", 10, "bold"))
+        btn_load_json = tk.Button(btn_frame, text="📄 2. Test Verisi Yükle", command=self.load_json, bg="#2196F3", fg="white", font=("Arial", 10, "bold"))
         btn_load_json.pack(side=tk.LEFT, padx=5, pady=5)
 
-        # --- DÜZELTME: Durum Etiketi (Status Label) Geri Eklendi ---
-        self.lbl_status = tk.Label(toolbar, text="Durum: Bekleniyor...", fg="red", bg="#e0e0e0", font=("Arial", 10))
+        self.lbl_status = tk.Label(btn_frame, text="Durum: Bekleniyor...", fg="red", bg="#e0e0e0", font=("Arial", 10))
         self.lbl_status.pack(side=tk.LEFT, padx=15)
 
-        # SKOR PANELI (Sağ Taraf)
-        self.score_frame = tk.Frame(toolbar, bg="#e0e0e0")
-        self.score_frame.pack(side=tk.RIGHT, padx=20)
+        # --- SKOR PANELI (GELİŞMİŞ) ---
+        self.score_frame = tk.Frame(toolbar, bg="white", bd=2, relief=tk.SUNKEN)
+        self.score_frame.pack(side=tk.RIGHT, padx=10, pady=5)
         
-        self.lbl_current_acc = tk.Label(self.score_frame, text="Anlık Başarı: -", font=("Arial", 11, "bold"), fg="#333", bg="#e0e0e0")
-        self.lbl_current_acc.pack(side=tk.LEFT, padx=10)
+        # Grid Layout kullanalım düzgün hizalama için
+        tk.Label(self.score_frame, text="MODEL PERFORMANSI", font=("Arial", 8, "bold"), bg="white", fg="gray").grid(row=0, column=0, columnspan=3, pady=2)
         
-        self.lbl_total_acc = tk.Label(self.score_frame, text="Ortalama Başarı: -", font=("Arial", 11, "bold"), fg="#00008B", bg="#e0e0e0")
-        self.lbl_total_acc.pack(side=tk.LEFT, padx=10)
+        # Başlıklar
+        tk.Label(self.score_frame, text="Anlık", font=("Arial", 8, "bold"), bg="white", fg="gray").grid(row=1, column=1, padx=5)
+        tk.Label(self.score_frame, text="Genel", font=("Arial", 8, "bold"), bg="white", fg="gray").grid(row=1, column=2, padx=5)
+        
+        # Satır 1: Hibrit Model (Bizim önerdiğimiz)
+        tk.Label(self.score_frame, text="HİBRİT:", font=("Arial", 10, "bold"), bg="white", anchor="w").grid(row=2, column=0, padx=5, sticky="w")
+        self.lbl_hybrid_score = tk.Label(self.score_frame, text="-%", font=("Arial", 12, "bold"), bg="white", fg="#2E7D32") # Koyu Yeşil
+        self.lbl_hybrid_score.grid(row=2, column=1, padx=5, sticky="e")
+        
+        self.lbl_hybrid_total = tk.Label(self.score_frame, text="-%", font=("Arial", 10, "bold"), bg="white", fg="#2E7D32")
+        self.lbl_hybrid_total.grid(row=2, column=2, padx=5, sticky="e")
+        
+        # Satır 2: Saf ML Model (Kıyaslama)
+        tk.Label(self.score_frame, text="SAF ML:", font=("Arial", 10), bg="white", anchor="w").grid(row=3, column=0, padx=5, sticky="w")
+        self.lbl_pure_score = tk.Label(self.score_frame, text="-%", font=("Arial", 11), bg="white", fg="#D32F2F") # Koyu Kırmızı
+        self.lbl_pure_score.grid(row=3, column=1, padx=5, sticky="e")
+        
+        self.lbl_pure_total = tk.Label(self.score_frame, text="-%", font=("Arial", 10), bg="white", fg="#D32F2F")
+        self.lbl_pure_total.grid(row=3, column=2, padx=5, sticky="e")
 
         # --- ANA ALAN ---
         paned_window = ttk.PanedWindow(self.root, orient=tk.HORIZONTAL)
@@ -71,7 +91,7 @@ class ResumeNERApp:
             self.text_area.tag_config(label, background=color)
 
         # SAĞ: Tablo
-        right_frame = ttk.LabelFrame(paned_window, text="Çıkarılan Varlıklar & Doğrulama")
+        right_frame = ttk.LabelFrame(paned_window, text="Çıkarılan Varlıklar (Hibrit Sonuç)")
         paned_window.add(right_frame, weight=2)
 
         columns = ("Entity Text", "Label", "Status")
@@ -99,75 +119,42 @@ class ResumeNERApp:
         btn_next = tk.Button(nav_frame, text="Sonraki >>", command=self.next_resume)
         btn_next.pack(side=tk.LEFT, padx=10)
         
-        btn_process = tk.Button(nav_frame, text="⚙️ ANALİZ ET & PUANLA", command=self.process_current_resume, bg="#FF5722", fg="white", font=("Arial", 11, "bold"))
+        btn_process = tk.Button(nav_frame, text="⚙️ ANALİZ ET & KARŞILAŞTIR", command=self.process_current_resume, bg="#FF5722", fg="white", font=("Arial", 11, "bold"))
         btn_process.pack(side=tk.RIGHT, padx=10)
 
     def load_model(self):
         initial_dir = "models"
-        if not os.path.exists(initial_dir):
-            initial_dir = os.getcwd()
+        if not os.path.exists(initial_dir): initial_dir = os.getcwd()
             
         path = filedialog.askdirectory(initialdir=initial_dir, title="Model Klasörünü Seç")
         
         if path:
             try:
-                # 1. ML Modelini Yükle
+                # 1. Modeli Yükle
                 self.nlp = spacy.load(path)
                 
-                # 2. Hibrit Katman (Rule-Based) - KOD İÇİNDE TANIMLI
+                # 2. Hibrit Katman (Rule-Based) - KOD İÇİNDE GÖMÜLÜ
                 if "entity_ruler" not in self.nlp.pipe_names:
                     ruler = self.nlp.add_pipe("entity_ruler", before="ner")
                     
-                    # --- DESENLERİ BURADA TANIMLIYORUZ (GARANTİ YÖNTEM) ---
                     patterns = [
-                        # Desen 1: "5 years", "5.5 yrs", "10+ months"
-                        {
-                            "label": "Years of Experience",
-                            "pattern": [
-                                {"TEXT": {"REGEX": r"^\d+(\.\d+)?\+?$"}}, # Sayı (5, 5.5, 5+)
-                                {"LOWER": {"IN": ["year", "years", "yr", "yrs", "month", "months", "mnths"]}}
-                            ]
-                        },
-                        # Desen 2: "Senior for 5 years" gibi durumlar için boşluk toleranslı
-                        {
-                             "label": "Years of Experience",
-                             "pattern": [
-                                 {"TEXT": {"REGEX": r"^\d+$"}}, 
-                                 {"TEXT": "+"},
-                                 {"LOWER": {"IN": ["year", "years", "yr", "yrs"]}}
-                             ]
-                        },
-                        # Desen 3: Yazı ile "Two years"
-                        {
-                            "label": "Years of Experience",
-                            "pattern": [{"LOWER": "one"}, {"LOWER": {"IN": ["year", "yr"]}}]
-                        },
-                        {
-                            "label": "Years of Experience",
-                            "pattern": [{"LOWER": "two"}, {"LOWER": {"IN": ["years", "yrs"]}}]
-                        },
-                        {
-                            "label": "Years of Experience",
-                            "pattern": [{"LOWER": "three"}, {"LOWER": {"IN": ["years", "yrs"]}}]
-                        }
+                        # Experience Patterns
+                        {"label": "Years of Experience", "pattern": [{"TEXT": {"REGEX": r"^\d+(\.\d+)?\+?$"}}, {"LOWER": {"IN": ["year", "years", "yr", "yrs", "month", "months"]}}]},
+                        {"label": "Years of Experience", "pattern": [{"TEXT": {"REGEX": r"^\d+$"}}, {"TEXT": "+"}, {"LOWER": {"IN": ["year", "years", "yr", "yrs"]}}]},
+                        {"label": "Years of Experience", "pattern": [{"LOWER": "one"}, {"LOWER": {"IN": ["year", "yr"]}}]},
+                        {"label": "Years of Experience", "pattern": [{"LOWER": "two"}, {"LOWER": {"IN": ["years", "yrs"]}}]}
                     ]
-                    
-                    # Desenleri Rulera Ekle
                     ruler.add_patterns(patterns)
-                    print("✅ Hibrit Katman (Kod İçi) Başarıyla Eklendi.")
-                    self.lbl_status.config(text="Model + Rule-Based (Kod) Aktif", fg="green")
-                
+                    print("✅ Hibrit Katman Eklendi.")
+                    self.lbl_status.config(text="Model + Rule-Based Aktif", fg="green")
                 else:
-                    print("ℹ️ Model içinde zaten EntityRuler var.")
                     self.lbl_status.config(text="Model Yüklendi (Dahili Ruler)", fg="green")
 
                 messagebox.showinfo("Bilgi", f"Model Başarıyla Yüklendi:\n{os.path.basename(path)}")
                 
             except Exception as e:
-                # Hata detayını konsola yazdıralım ki görelim
-                print(f"❌ KRİTİK HATA: {e}")
-                self.lbl_status.config(text="Model Yükleme Hatası!", fg="red")
-                messagebox.showerror("Hata", f"Model yüklenirken hata oluştu:\n{str(e)}")
+                self.lbl_status.config(text="Model Hatası!", fg="red")
+                messagebox.showerror("Hata", str(e))
 
     def load_json(self):
         initial_dir = os.path.join("data", "processed")
@@ -179,12 +166,18 @@ class ResumeNERApp:
                 with open(path, 'r', encoding="utf-8") as f:
                     self.resume_data = json.load(f)
                 self.current_index = 0
-                self.total_processed = 0 
-                self.total_score_acc = 0.0
                 self.update_display()
                 self.lbl_status.config(text="Veri Yüklendi. Analiz Bekleniyor.", fg="orange")
-                self.lbl_current_acc.config(text="Anlık Başarı: -")
-                self.lbl_total_acc.config(text="Ortalama Başarı: -")
+                # Skorları temizle
+                self.lbl_hybrid_score.config(text="-%", fg="black")
+                self.lbl_pure_score.config(text="-%", fg="black")
+                self.lbl_hybrid_total.config(text="-%", fg="black")
+                self.lbl_pure_total.config(text="-%", fg="black")
+                
+                # İstatistikleri Sıfırla
+                self.total_processed = 0
+                self.total_hybrid_acc = 0.0
+                self.total_pure_acc = 0.0
             except Exception as e:
                 messagebox.showerror("Hata", str(e))
 
@@ -196,30 +189,61 @@ class ResumeNERApp:
         for i in self.tree.get_children(): self.tree.delete(i)
         self.lbl_counter.config(text=f"{self.current_index + 1} / {len(self.resume_data)}")
 
+    def calculate_accuracy(self, doc, ground_truth_set):
+        """Verilen doc objesi ile ground truth arasındaki başarıyı ölçer."""
+        hits = 0
+        total_expected = len(ground_truth_set)
+        
+        if total_expected == 0: return 100.0 if len(doc.ents) == 0 else 0.0
+
+        for ent in doc.ents:
+            # Basit eşleşme kontrolü (Label, Text)
+            if (ent.label_, ent.text.strip()) in ground_truth_set:
+                hits += 1
+        
+        return (hits / total_expected) * 100
+
     def process_current_resume(self):
-        if not self.nlp or not self.resume_data: 
-            messagebox.showwarning("Uyarı", "Model veya Veri eksik!")
-            return
+        if not self.nlp or not self.resume_data: return
 
         text = self.text_area.get("1.0", tk.END).strip()
-        doc = self.nlp(text)
         
-        # --- DOĞRULAMA (GROUND TRUTH) ---
+        # --- 1. GROUND TRUTH HAZIRLA ---
         current_annotations = self.resume_data[self.current_index].get("annotation", [])
         ground_truth_set = set()
-        
         for ann in current_annotations:
             lbl = ann["label"][0]
             points = ann["points"][0]
             truth_text = points.get("text", text[points["start"]:points["end"]+1]).strip()
-            # Basit normalizasyon (küçük harf vs. yok, direkt string kıyas)
             ground_truth_set.add((lbl, truth_text))
 
-        predictions = []
-        hits = 0
+        # --- 2. HİBRİT ANALİZ (TÜM PIPE'LAR AKTİF) ---
+        doc_hybrid = self.nlp(text)
+        acc_hybrid = self.calculate_accuracy(doc_hybrid, ground_truth_set)
+
+        # --- 3. SAF ML ANALİZİ (RULE KAPALI) ---
+        # Spacy'de bir pipe'ı geçici olarak kapatmak için disable_pipes kullanılır
+        # "entity_ruler" bizim eklediğimiz kural katmanının adı
+        try:
+            with self.nlp.disable_pipes("entity_ruler"):
+                doc_pure = self.nlp(text)
+                acc_pure = self.calculate_accuracy(doc_pure, ground_truth_set)
+        except:
+            # Eğer pipeline isminde sorun varsa fallback yap
+            # (entity_ruler yoksa zaten pure ML çalışır)
+            doc_pure = self.nlp(text) 
+            acc_pure = acc_hybrid # Ruler yoksa eşittir
+
+        # --- 4. GÖRSELLEŞTİRME (HİBRİT SONUÇLARI GÖSTER) ---
         
-        for ent in doc.ents:
-            # Highlight
+        # Highlight ve Tablo
+        for i in self.tree.get_children(): self.tree.delete(i)
+        
+        # Önce highlightları temizle (tag_remove tüm metin için zor olabilir, yeniden çizmek daha kolay)
+        # Basitlik için sadece üstüne yazıyoruz
+        
+        for ent in doc_hybrid.ents:
+            # Highlight Logic
             start_idx = "1.0"
             while True:
                 start_idx = self.text_area.search(ent.text, start_idx, stopindex=tk.END)
@@ -228,37 +252,30 @@ class ResumeNERApp:
                 self.text_area.tag_add(ent.label_, start_idx, end_idx)
                 start_idx = end_idx
             
-            # Doğruluk Kontrolü
+            # Tabloya Ekle
             is_correct = (ent.label_, ent.text.strip()) in ground_truth_set
-            
             status_icon = "✅" if is_correct else "⚠️"
-            if is_correct: hits += 1
-                
-            predictions.append((ent.text, ent.label_, status_icon))
+            self.tree.insert("", tk.END, values=(ent.text, ent.label_, status_icon))
 
-        # Tabloyu Güncelle
-        for i in self.tree.get_children(): self.tree.delete(i)
-        for pred in predictions:
-            self.tree.insert("", tk.END, values=pred)
-            
-        # Skor Hesapla
-        total_expected = len(ground_truth_set)
-        if total_expected > 0:
-            current_accuracy = (hits / total_expected) * 100
-        else:
-            current_accuracy = 100 if hits == 0 else 0
-
+        # --- 5. SKORLARI GÜNCELLE ---
         self.total_processed += 1
-        self.total_score_acc += current_accuracy
-        average_accuracy = self.total_score_acc / self.total_processed
+        self.total_hybrid_acc += acc_hybrid
+        self.total_pure_acc += acc_pure
+        
+        avg_hybrid = self.total_hybrid_acc / self.total_processed
+        avg_pure = self.total_pure_acc / self.total_processed
 
-        self.lbl_current_acc.config(text=f"Anlık Başarı: %{current_accuracy:.1f}")
-        self.lbl_total_acc.config(text=f"Ortalama Başarı: %{average_accuracy:.1f}")
+        self.lbl_hybrid_score.config(text=f"%{acc_hybrid:.1f}", fg="#2E7D32") # Yeşil
+        self.lbl_hybrid_total.config(text=f"%{avg_hybrid:.1f}", fg="#2E7D32")
         
-        color = "green" if current_accuracy > 70 else "orange" if current_accuracy > 40 else "red"
-        self.lbl_current_acc.config(fg=color)
+        # Renk mantığı: Pure ML hibrit'ten düşükse kırmızı yap (kötü olduğunu vurgula)
+        pure_color = "#D32F2F" if acc_pure < acc_hybrid else "gray"
+        self.lbl_pure_score.config(text=f"%{acc_pure:.1f}", fg=pure_color)
         
-        self.lbl_status.config(text="Analiz Tamamlandı", fg="blue")
+        pure_total_color = "#D32F2F" if avg_pure < avg_hybrid else "gray"
+        self.lbl_pure_total.config(text=f"%{avg_pure:.1f}", fg=pure_total_color)
+
+        self.lbl_status.config(text=f"Analiz Tamamlandı (Toplam: {self.total_processed})", fg="blue")
 
     def next_resume(self):
         if self.resume_data and self.current_index < len(self.resume_data) - 1:
