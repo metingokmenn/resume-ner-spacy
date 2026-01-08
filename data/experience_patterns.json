@@ -1,0 +1,31 @@
+[
+    {
+      "label": "Years of Experience",
+      "pattern": [
+        {"TEXT": {"REGEX": "^\\d+(\\.\\d+)?$"}},
+        {"LOWER": {"IN": ["year", "years", "yr", "yrs", "month", "months", "mnths"]}}
+      ]
+    },
+    {
+      "label": "Years of Experience",
+      "pattern": [
+        {"TEXT": {"REGEX": "^\\d+$"}},
+        {"TEXT": "+"},
+        {"LOWER": {"IN": ["year", "years", "yr", "yrs"]}}
+      ]
+    },
+    {
+      "label": "Years of Experience",
+      "pattern": [
+        {"LOWER": "one"},
+        {"LOWER": {"IN": ["year", "yr"]}}
+      ]
+    },
+    {
+      "label": "Years of Experience",
+      "pattern": [
+        {"LOWER": "two"},
+        {"LOWER": {"IN": ["years", "yrs"]}}
+      ]
+    }
+  ]
