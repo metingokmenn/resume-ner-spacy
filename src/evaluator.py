@@ -22,7 +22,7 @@ class ModelEvaluator:
         examples = []
         
         for text, annotations in self.test_data:
-            doc = self.nlp(text) # Tahmin yap
+            doc = self.nlp(text) 
             try:
                 example = Example.from_dict(doc, annotations)
                 examples.append(example)

@@ -28,7 +28,6 @@ class ResumeNERTrainer:
             logging.info("Blank Model training started...")
             self.nlp = spacy.blank("en")
 
-        # NER pipe kontrolü
         if "ner" not in self.nlp.pipe_names:
             self.ner = self.nlp.add_pipe("ner", last=True)
         else:

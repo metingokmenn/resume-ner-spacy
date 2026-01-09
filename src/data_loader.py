@@ -21,7 +21,7 @@ class ResumeDataLoader:
     def _clean_entity_spans(self, text, start, end):
         """General cleaning (Trim)."""
         entity_text = text[start:end]
-        # Parantezleri ve özel karakterleri de temizle
+        
         chars_to_strip = ",.;:- \n\t\"'•()[]"
 
         if not entity_text.strip():
@@ -46,9 +46,7 @@ class ResumeDataLoader:
         """
         span_text = text[start:end]
         
-        # 1st STRATEGY: Strict Pattern (Number + Unit + Optional Dot)
-        # Example: "5+ Years", "5yrs.", "5-6 months", "3.5 Yrs"
-        # yrs?\.? -> "yrs" or "yrs." matches.
+       
         pattern_strict = r'(\d+(?:[\.\-]\d+)?\+?)\s*(?:years?|yrs?\.?|months?|mnths?)'
         
         match = re.search(pattern_strict, span_text, re.IGNORECASE)
@@ -58,9 +56,7 @@ class ResumeDataLoader:
             new_end = start + match.end()
             return new_start, new_end
             
-        # 2nd STRATEGY: Only Number (Fallback)
-        # If "Experience: 5" and no year, just take "5".
-        # This is better than nothing and prevents 0.0 score.
+        
         pattern_digits = r'(\d+(?:[\.\-]\d+)?\+?)'
         match_digit = re.search(pattern_digits, span_text)
         
@@ -69,7 +65,7 @@ class ResumeDataLoader:
              new_end = start + match_digit.end()
              return new_start, new_end
 
-        # 3rd STRATEGY: Clean entity spans
+       
         return self._clean_entity_spans(text, start, end)
 
     def _split_skills(self, text, start, end, label):
@@ -89,7 +85,7 @@ class ResumeDataLoader:
             sub_end = start + match.end()
             c_start, c_end = self._clean_entity_spans(text, sub_start, sub_end)
             
-            # Skip very short (1-2 characters) skills, but keep C, R, Go, AI etc.
+            
             if c_start and (c_end - c_start > 2 or text[c_start:c_end].strip().upper() in ['C', 'R', 'GO', 'AI', 'JS', 'ML']):
                 new_entities.append((c_start, c_end, label))
 
@@ -131,7 +127,7 @@ class ResumeDataLoader:
                     if start >= end: continue
                     end += 1 
 
-                    # --- LABEL SPECIAL PROCESSES ---
+                    
                     potential_entities = []
                     
                     if label == "Years of Experience":
@@ -145,16 +141,14 @@ class ResumeDataLoader:
                         if c_start is not None:
                             potential_entities.append((c_start, c_end, label))
 
-                    # Align all potential entities to Spacy
+                    
                     for p_start, p_end, p_label in potential_entities:
-                        # alignment_mode="contract": 
-                        # If "4yrs." text and we found "4yrs" but Spacy splits it into "4", "yrs", "."
-                        # contract mode only takes "4" and "yrs" tokens, leaving the period outside.
+                        
                         span = doc.char_span(p_start, p_end, label=p_label, alignment_mode="contract")
                         if span:
                             spans.append(span)
 
-                # Filtering and Saving
+                
                 filtered_spans = filter_spans(spans)
                 final_entities = [(span.start_char, span.end_char, span.label_) for span in filtered_spans]
 
