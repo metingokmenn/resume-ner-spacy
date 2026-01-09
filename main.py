@@ -27,7 +27,6 @@ def run_experiment(exp_name, base_model, train_data, test_data):
     
     print(f"\n>>> {exp_name} F1 Score: {f1_score:.4f}")
     
-    # Tabloya 'Model' sütunu ekle (Karşılaştırma için)
     df_metrics['Model'] = exp_name
     return df_metrics
 
@@ -38,7 +37,6 @@ def plot_comparison(combined_df):
     plt.figure(figsize=(14, 8))
     sns.set_theme(style="whitegrid")
     
-    # Grouped Bar Chart
     chart = sns.barplot(
         data=combined_df, 
         x="F1-Score", 
@@ -61,19 +59,16 @@ def plot_comparison(combined_df):
     print(f"\n[INFO] Comparison plot saved: {save_path}")
 
 def main():
-    # 1. Veriyi Tek Sefer Yükle (Adil Karşılaştırma İçin)
     loader = ResumeDataLoader("data/raw/ner_resumes.json")
     train_data, test_data = loader.load_and_split_data()
     
     if not train_data: return
 
-    # 2. Deneyleri Tanımla
     experiments = [
         # Deney 1: Sıfırdan Model
         {"name": "Blank Model", "base": None},
         
         # Deney 2: Transfer Learning (Varsa)
-        # 'en_core_web_lg' yoksa trainer otomatik blank'e düşecek, sorun yok.
         {"name": "Transfer Learning", "base": "en_core_web_lg"} 
     ]
     
