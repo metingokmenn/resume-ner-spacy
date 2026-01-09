@@ -1,74 +1,72 @@
 # Information Extraction from Unstructured Resumes using NER
 
-## 📌 Proje Özeti (Abstract)
+## 📌 Project Abstract
 
-Bu proje, yapısal olmayan (unstructured) özgeçmiş metinlerinden yapılandırılmış bilgi (İsim, Yetenekler, Okul, Deneyim vb.) çıkarmayı amaçlayan bir Doğal Dil İşleme (NLP) çalışmasıdır. Proje kapsamında, Spacy kütüphanesi kullanılarak özel bir Varlık Tanıma (Named Entity Recognition - NER) modeli eğitilmiş ve test edilmiştir.
+This project is a Natural Language Processing (NLP) study aiming to extract structured information (Name, Skills, School, Experience, etc.) from unstructured resume texts. Within the scope of the project, a custom Named Entity Recognition (NER) model was trained and tested using the Spacy library.
 
-## 🛠️ Yöntem (Methodology)
+## 🛠️ Methodology
 
-Proje aşağıdaki akademik boru hattını (pipeline) takip etmektedir:
+The project follows the academic pipeline below:
 
-1.  **Veri Toplama:** Kaggle kaynaklı 220 adet etiketlenmiş özgeçmiş verisi kullanıldı.
-2.  **Ön İşleme (Preprocessing):**
-    - Veri temizliği (Boşluk ve karakter düzeltmeleri).
-    - Alignment (Hizalama) sorunları için özel `Span Trimming` algoritması geliştirildi.
-3.  **Veri Bölümleme:** Veri seti, modelin genelleme yeteneğini ölçmek amacıyla **%80 Eğitim (Train)** ve **%20 Test** olarak randomize şekilde ayrıldı.
-4.  **Model Eğitimi:**
-    - **Mimari:** Transition-based NER (Spacy).
-    - **Optimizasyon:** `Compounding Batch Size` ve `Dropout Decay` teknikleri ile overfitting engellendi.
-5.  **Değerlendirme:** Test seti üzerinde Precision, Recall ve F1-Score metrikleri hesaplandı.
+1.  **Data Collection:** 220 labeled resume entries sourced from Kaggle were used.
+2.  **Preprocessing:**
+    - Data cleaning (Whitespace and character corrections).
+    - A special `Span Trimming` algorithm was developed for Alignment issues.
+3.  **Data Splitting:** The dataset was randomly split into **80% Training (Train)** and **20% Test** to measure the model's generalization ability.
+4.  **Model Training:**
+    - **Architecture:** Transition-based NER (Spacy).
+    - **Optimization:** Overfitting was prevented using `Compounding Batch Size` and `Dropout Decay` techniques.
+5.  **Evaluation:** Precision, Recall, and F1-Score metrics were calculated on the test set.
 
-## 📂 Proje Yapısı
+## 📂 Project Structure
 
-- `data/`: Ham veri setleri.
-- `src/`: Kaynak kodlar (Loader, Trainer, Evaluator).
-- `models/`: Eğitilmiş model çıktıları.
-- `results/`: Performans grafikleri ve metrik tabloları.
+- `data/`: Raw datasets.
+- `src/`: Source codes (Loader, Trainer, Evaluator).
+- `models/`: Trained model outputs.
+- `results/`: Performance charts and metric tables.
 
-## 📊 Deneysel Sonuçlar
+## 📊 Experimental Results
 
-Modelin test veri seti üzerindeki başarısı `results/evaluation_metrics.csv` dosyasında detaylandırılmıştır. Genel F1 skoru ve etiket bazlı başarı dağılımı `results/f1_score_chart.png` grafiğinde sunulmuştur.
+The success of the model on the test dataset is detailed in the `results/evaluation_metrics.csv` file. The general F1 score and label-based success distribution are presented in the `results/f1_score_chart.png` graph.
 
-## 🚀 Kurulum ve Çalıştırma
+## 🚀 Installation and Usage
 
-1. **Gereksinimleri Yükleyin:**
+1. **Install Requirements:**
 
    ```bash
    pip install -r requirements.txt
    ```
 
-2. **Projeyi Başlatın:**
+2. **Start the Project:**
 
    ```bash
    python main.py
    ```
 
-   Bu komut veri işleme, eğitim ve test süreçlerini otomatik olarak sırayla çalıştırır.
+   This command automatically runs the data processing, training, and testing processes in order.
 
 ---
 
-## Geliştirici
+## Developer
 
-**Ad Soyad:** Metin Gökmen
-
-**Ders:** Doğal Dil İşlemeye Kavramsal Bir Bakış
+**Name Surname:** Metin Gökmen
 
 ### 🚫 `.gitignore`
 
-Git reposunu temiz tutmak için:
+To keep the git repo clean:
 
 ```text
-# Python sanal ortam
+# Python virtual environment
 venv/
 __pycache__/
 *.pyc
 
-# Model dosyaları (Büyük olabilir)
+# Model files (Can be large)
 models/
 
-# Sonuçlar (Tekrar üretilebilir)
+# Results (Reproducible)
 results/
 
-# Sistem dosyaları
+# System files
 .DS_Store
 ```
